@@ -4,10 +4,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @RestController
-@RequestMapping("/api")
-public class HelloController {
 
-    @GetMapping("/helloworld")
+public class HelloController {
+    @GetMapping("/")
     public String index() {
         return "Hello world!";
     }
