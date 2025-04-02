@@ -18,6 +18,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+
     public User createUser(String username, String email, String plainPassword) {
         String hashedPassword = passwordEncoder.encode(plainPassword);
         User user = new User(username, email, hashedPassword);

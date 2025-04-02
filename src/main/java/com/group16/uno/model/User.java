@@ -1,5 +1,6 @@
 package com.group16.uno.model;
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {@UniqueConstraint(columnNames = "username")})
@@ -18,13 +19,22 @@ public class User {
     @Column(nullable = false)
     private String hashed_password;
 
+    @Column(nullable = false)
+    private String email;
+
+    @OneToMany
+    @JoinColumn(name="user_id")
+    private List<DailyScore> dailyScores;
+
 
     public User() {}
+
 
     public User(String username, String email, String password) {
         this.username = username;
         this.email = email;
         this.hashed_password = password;
+        this.email = email;
     }
 
     public String getId() {
@@ -54,4 +64,8 @@ public class User {
     public void setPassword(String hashed_password) {
         this.hashed_password = hashed_password;
     }
+
+    public String getEmail() {return email;}
+
+    public void setEmail(String email) {this.email = email;}
 }
