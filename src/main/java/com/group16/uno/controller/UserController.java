@@ -27,8 +27,9 @@ public class UserController {
     @PostMapping("/register")
     public User registerUser(
             @Parameter(description = "Username for the new user", required = true) @RequestParam String username,
-            @Parameter(description = "Password for the new user", required = true) @RequestParam String password) {
-        return userService.createUser(username, password);
+            @Parameter(description = "Password for the new user", required = true) @RequestParam String password,
+            @Parameter(description = "Email for the new user", required = true) @RequestParam String email) {
+        return userService.createUser(username, password, email);
     }
 
     @Operation(summary = "Get user details", description = "Fetches user details by id.")
@@ -38,7 +39,7 @@ public class UserController {
     })
     @GetMapping("/{id}")
     public Optional<User> getUser(
-            @Parameter(description = "Id of the user to fetch", required = true) @PathVariable String username) {
-        return userService.getUserById(username);
+            @Parameter(description = "Id of the user to fetch", required = true) @PathVariable String id) {
+        return userService.getUserById(id);
     }
 }

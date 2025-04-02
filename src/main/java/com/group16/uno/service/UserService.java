@@ -13,8 +13,8 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public User createUser(String username, String password) {
-        User user = new User(username, password);
+    public User createUser(String username, String password, String email) {
+        User user = new User(username, password, email);
         return userRepository.save(user);
     }
 
