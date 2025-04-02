@@ -12,14 +12,18 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(nullable = false, unique = true)
+    private String email;
+
     @Column(nullable = false)
     private String hashed_password;
 
 
     public User() {}
 
-    public User(String username, String password) {
+    public User(String username, String email, String password) {
         this.username = username;
+        this.email = email;
         this.hashed_password = password;
     }
 
@@ -38,6 +42,10 @@ public class User {
     public void setUsername(String username) {
         this.username = username;
     }
+
+    public String getEmail() { return email; }
+
+    public void setEmail(String email) { this.email = email; }
 
     public String getPassword() {
         return hashed_password;
