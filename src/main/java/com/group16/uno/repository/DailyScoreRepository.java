@@ -30,24 +30,25 @@ public interface DailyScoreRepository extends JpaRepository<DailyScore, Long> {
             @Param("increment") Integer value
     );
 
-    @Query(value = "SELECT ds.user.username, SUM(ds.score) as total_score " +
-                   "FROM DailyScore ds " +
-                   "WHERE ds.createdAt >= CURDATE() - INTERVAL 7 DAY " +
-                   "GROUP BY ds.user.username " +
+    @Query(value = "SELECT u.username, SUM(ds.score) as total_score " +
+                   "FROM daily_score ds, user u " +
+                   "WHERE ds.user_id = u.id and ds.createdAt >= CURDATE() - INTERVAL 7 DAY " +
+                   "GROUP BY u.username " +
                    "ORDER BY total_score DESC", nativeQuery = true)
     List<LeaderBoardDTO> getWeeklyLeaderBoard();
 
-    @Query(value = "SELECT ds.user.username, SUM(ds.score) as total_score " +
-                   "FROM DailyScore ds " +
-                   "WHERE ds.createdAt >= CURDATE() - INTERVAL 30 DAY " +
-                   "GROUP BY ds.user.username " +
+    @Query(value = "SELECT u.username, SUM(ds.score) as total_score " +
+                   "FROM daily_score ds, user u " +
+                   "WHERE ds.user_id = u.id and ds.createdAt >= CURDATE() - INTERVAL 30 DAY " +
+                   "GROUP BY u.username " +
                    "ORDER BY total_score DESC", nativeQuery = true)
     List<LeaderBoardDTO> getMonthlyLeaderBoard();
 
-    @Query("SELECT ds.user.username, SUM(ds.score) as total_score " +
-            "FROM DailyScore ds " +
-            "GROUP BY ds.user.username " +
-            "ORDER BY total_score DESC")
+    @Query(value = "SELECT u.username, SUM(ds.score) as total_score " +
+                   "FROM daily_score ds, user u " +
+                   "WHERE ds.user_id = u.id " +
+                   "GROUP BY u.username " +
+                   "ORDER BY total_score DESC", nativeQuery = true)
     List<LeaderBoardDTO> getAllTimeLeaderBoard();
 
 }
