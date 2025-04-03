@@ -26,6 +26,7 @@ public class UserService implements UserDetailsService {
         this.passwordTokenRepository = passwordTokenRepository;
     }
 
+
     public User createUser(String username, String email, String plainPassword) {
         String hashedPassword = passwordEncoder.encode(plainPassword);
         User user = new User(username, email, hashedPassword);

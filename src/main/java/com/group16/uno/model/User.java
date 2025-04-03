@@ -1,11 +1,13 @@
 package com.group16.uno.model;
 
 import jakarta.persistence.*;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {@UniqueConstraint(columnNames = "username")})
@@ -24,12 +26,21 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String hashed_password;
 
+
+    @OneToMany
+    @JoinColumn(name="user_id")
+    private List<DailyScore> dailyScores;
+
+
+
     public User() {}
+
 
     public User(String username, String email, String password) {
         this.username = username;
         this.email = email;
         this.hashed_password = password;
+
     }
 
     public String getId() {
@@ -82,4 +93,5 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
 }

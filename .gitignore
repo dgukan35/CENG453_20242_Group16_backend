@@ -41,4 +41,5 @@ secrets.yml
 .sts4-cache
 .git-hooks/
 node_modules
-src/main/resources/application.properties
+.env
+.idea/
