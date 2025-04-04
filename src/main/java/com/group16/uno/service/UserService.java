@@ -4,7 +4,6 @@ import com.group16.uno.model.PasswordResetToken;
 import com.group16.uno.repository.PasswordTokenRepository;
 
 import com.group16.uno.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
