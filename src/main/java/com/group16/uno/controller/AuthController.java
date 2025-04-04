@@ -19,7 +19,7 @@ import com.group16.uno.dto.LoginResponseDto;
 import org.modelmapper.ModelMapper;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-
+import jakarta.transaction.Transactional;
 
 import java.util.*;
 
@@ -70,9 +70,14 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Password must be at least 6 characters");
         }
 
-        Optional<User> existingUser = userService.getUserByUsername(username);
-        if (existingUser.isPresent()) {
-            return ResponseEntity.badRequest().build();
+        Optional<User> existingUserByUsername = userService.getUserByUsername(username);
+        if (existingUserByUsername.isPresent()) {
+            return ResponseEntity.badRequest().body("Username already taken");
+        }
+
+        Optional<User> existingUserByEmail = userService.getUserByEmail(email);
+        if (existingUserByEmail.isPresent()) {
+            return ResponseEntity.badRequest().body("Email is already registered");
         }
 
         User createdUser = userService.createUser(username, email, password);
@@ -107,6 +112,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @Transactional
     @Operation(summary = "Send reset password token to email address")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Password reset link sent to email",
@@ -129,8 +135,16 @@ public class AuthController {
             User user = optionalUser.get();
             String token = UUID.randomUUID().toString();
 
-            PasswordResetToken resetToken = new PasswordResetToken(token, user);
-            passwordTokenRepository.save(resetToken);
+            Optional<PasswordResetToken> existingToken = passwordTokenRepository.findByUser(user);
+
+            if (existingToken.isPresent()) {
+                PasswordResetToken tokenEntity = existingToken.get();
+                tokenEntity.setToken(token);
+                tokenEntity.setExpiryDate(new Date(System.currentTimeMillis() + 1000 * 60 * 30));
+                passwordTokenRepository.save(tokenEntity);
+            } else {
+                passwordTokenRepository.save(new PasswordResetToken(token, user));
+            }
 
             String resetLink = "http://localhost:8080/swagger-ui/index.html#/Authentication%20Controller/validateResetTokenUsingGET?token=" + token;
 
