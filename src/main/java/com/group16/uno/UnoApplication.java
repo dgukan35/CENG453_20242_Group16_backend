@@ -16,7 +16,7 @@ public class UnoApplication {
 	@Bean
 	public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
 		return args -> {
-			System.out.println("Hello world");
+			System.out.println("Uno Backend");
 		};
 	}
 

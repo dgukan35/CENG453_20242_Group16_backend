@@ -42,7 +42,7 @@ public class AuthController {
         this.emailService = emailService;
     }
 
-    @Operation(summary = "Create a user")
+    @Operation(summary = "Sign up")
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestParam String username,
                                       @RequestParam String email,

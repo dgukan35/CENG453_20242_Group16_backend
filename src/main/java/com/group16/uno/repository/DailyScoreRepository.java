@@ -23,12 +23,12 @@ public interface DailyScoreRepository extends JpaRepository<DailyScore, Long> {
     @Modifying
     @Transactional
     @Query("UPDATE DailyScore ds " +
-            "SET ds.score = ds.score + :value " +
+            "SET ds.score = ds.score + :increment " +
             "WHERE ds.user.id = :userId and ds.createdAt = :createdAt")
     void updateDailyScore(
             @Param("userId") String userId,
             @Param("createdAt") Date createdAt,
-            @Param("increment") BigDecimal value
+            @Param("increment") BigDecimal increment
     );
 
     @Query(value = "SELECT u.username, SUM(ds.score) as total_score " +
