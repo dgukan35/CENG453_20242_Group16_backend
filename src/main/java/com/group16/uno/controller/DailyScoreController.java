@@ -48,42 +48,54 @@ public class DailyScoreController {
             }
 
             return ResponseEntity.ok("Daily score successfully updated");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error updating daily score: " + e.getMessage());
         }
     }
 
     @Operation(summary = "Get weekly leaderboard")
-    @ApiResponses( value = {
+    @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Weekly leaderboard retrieved successfully"),
             @ApiResponse(responseCode = "404", description = "User scores for the last week not found")
     })
     @GetMapping("/weekly-leaderboard")
     public ResponseEntity<List<LeaderBoardDTO>> getWeeklyLeaderboard() {
-        List<LeaderBoardDTO> leaderboard = dailyScoreService.getWeeklyLeaderBoard();
+        try {
+            List<LeaderBoardDTO> leaderboard = dailyScoreService.getWeeklyLeaderBoard();
 
-        if (!leaderboard.isEmpty()) {
-            return ResponseEntity.ok(leaderboard);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+            if (!leaderboard.isEmpty()) {
+                return ResponseEntity.ok(leaderboard);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.emptyList());
         }
     }
 
     @Operation(summary = "Get monthly leaderboard")
-    @ApiResponses( value = {
+    @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Monthly leaderboard retrieved successfully"),
             @ApiResponse(responseCode = "404", description = "User scores for the last month not found")
     })
     @GetMapping("/monthly-leaderboard")
     public ResponseEntity<List<LeaderBoardDTO>> getMonthlyLeaderboard() {
-        List<LeaderBoardDTO> leaderboard = dailyScoreService.getMonthlyLeaderBoard();
+        try {
+            List<LeaderBoardDTO> leaderboard = dailyScoreService.getMonthlyLeaderBoard();
 
-        if (!leaderboard.isEmpty()) {
-            return ResponseEntity.ok(leaderboard);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+            if (!leaderboard.isEmpty()) {
+                return ResponseEntity.ok(leaderboard);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.emptyList());
         }
     }
 
@@ -95,13 +107,20 @@ public class DailyScoreController {
     })
     @GetMapping("/all-time-leaderboard")
     public ResponseEntity<List<LeaderBoardDTO>> getAllTimeLeaderboard() {
-        List<LeaderBoardDTO> leaderboard = dailyScoreService.getAllTimeLeaderBoard();
+        try {
+            List<LeaderBoardDTO> leaderboard = dailyScoreService.getAllTimeLeaderBoard();
 
-        if (!leaderboard.isEmpty()) {
-            return ResponseEntity.ok(leaderboard);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+            if (!leaderboard.isEmpty()) {
+                return ResponseEntity.ok(leaderboard);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.emptyList());
         }
     }
+
 
 }
