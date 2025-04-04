@@ -1,15 +1,22 @@
 package com.group16.uno.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.sql.Date;
 
 @Entity
 @Table(name = "daily_score", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "created_at"}))
 public class DailyScore {
+    @Setter
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Setter
+    @Getter
     @ManyToOne
     @JoinColumn(name="user_id")
     private User user;
@@ -17,6 +24,8 @@ public class DailyScore {
     @Column(nullable = false)
     private Date createdAt;
 
+    @Setter
+    @Getter
     @Column(nullable = false)
     private Integer score;
 
@@ -27,14 +36,6 @@ public class DailyScore {
         this.createdAt = createdAt;
         this.score = score;
     }
-
-    public String getId() { return id; }
-
-    public void setId(String id) { this.id = id; }
-
-    public User getUser() { return user; }
-
-    public void setUser(User user) { this.user = user; }
 
     public Date geteDate() { return createdAt; }
 

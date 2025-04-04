@@ -31,21 +31,21 @@ public interface DailyScoreRepository extends JpaRepository<DailyScore, Long> {
     );
 
     @Query(value = "SELECT u.username, SUM(ds.score) as total_score " +
-                   "FROM daily_score ds, user u " +
-                   "WHERE ds.user_id = u.id and ds.createdAt >= CURDATE() - INTERVAL 7 DAY " +
+                   "FROM daily_score ds, users u " +
+                   "WHERE ds.user_id = u.id and ds.created_at >= CURDATE() - INTERVAL 7 DAY " +
                    "GROUP BY u.username " +
                    "ORDER BY total_score DESC", nativeQuery = true)
     List<LeaderBoardDTO> getWeeklyLeaderBoard();
 
     @Query(value = "SELECT u.username, SUM(ds.score) as total_score " +
-                   "FROM daily_score ds, user u " +
-                   "WHERE ds.user_id = u.id and ds.createdAt >= CURDATE() - INTERVAL 30 DAY " +
+                   "FROM daily_score ds, users u " +
+                   "WHERE ds.user_id = u.id and ds.created_at >= CURDATE() - INTERVAL 30 DAY " +
                    "GROUP BY u.username " +
                    "ORDER BY total_score DESC", nativeQuery = true)
     List<LeaderBoardDTO> getMonthlyLeaderBoard();
 
     @Query(value = "SELECT u.username, SUM(ds.score) as total_score " +
-                   "FROM daily_score ds, user u " +
+                   "FROM daily_score ds, users u " +
                    "WHERE ds.user_id = u.id " +
                    "GROUP BY u.username " +
                    "ORDER BY total_score DESC", nativeQuery = true)

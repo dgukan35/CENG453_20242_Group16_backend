@@ -2,6 +2,8 @@ package com.group16.uno.model;
 
 import jakarta.persistence.*;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -13,6 +15,8 @@ import java.util.List;
 @Table(name = "users", uniqueConstraints = {@UniqueConstraint(columnNames = "username")})
 public class User implements UserDetails {
 
+    @Setter
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -20,6 +24,8 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String username;
 
+    @Setter
+    @Getter
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -42,18 +48,6 @@ public class User implements UserDetails {
         this.hashed_password = password;
 
     }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getEmail() { return email; }
-
-    public void setEmail(String email) { this.email = email; }
 
     public void setPassword(String hashed_password) {
         this.hashed_password = hashed_password;
