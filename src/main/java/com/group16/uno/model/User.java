@@ -21,6 +21,8 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Setter
+    @Getter
     @Column(nullable = false, unique = true)
     private String username;
 
@@ -61,11 +63,6 @@ public class User implements UserDetails {
     @Override
     public String getPassword() {
         return this.hashed_password;
-    }
-
-    @Override
-    public String getUsername() {
-        return this.username;
     }
 
     @Override

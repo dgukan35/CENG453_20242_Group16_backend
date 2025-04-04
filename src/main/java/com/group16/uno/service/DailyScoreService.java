@@ -52,4 +52,8 @@ public class DailyScoreService {
         return dailyScoreRepository.getAllTimeLeaderBoard();
     }
 
+    public long geDailyScoreCount() {
+        return dailyScoreRepository.count();
+    }
+
 }

@@ -57,7 +57,7 @@ class DailyScoreServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals("userId", result.getUser().getId());
-        assertEquals(100, result.getScore());
+        assertEquals(BigDecimal.valueOf(100), result.getScore());
         verify(userRepository).findById("userId");
         verify(dailyScoreRepository).save(any(DailyScore.class));
     }
@@ -86,7 +86,7 @@ class DailyScoreServiceTest {
 
         // Assert
         assertTrue(result.isPresent());
-        assertEquals(100, result.get().getScore());
+        assertEquals(BigDecimal.valueOf(100), result.get().getScore());
         verify(dailyScoreRepository).findByUserIdAndCreatedAt("userId", createdAt);
     }
 
@@ -114,7 +114,7 @@ class DailyScoreServiceTest {
         // Assert
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertEquals(100, result.get(0).getTotalScore());
+        assertEquals(BigDecimal.valueOf(100), result.get(0).getTotalScore());
         verify(dailyScoreRepository).getWeeklyLeaderBoard();
     }
 
@@ -130,7 +130,7 @@ class DailyScoreServiceTest {
         // Assert
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertEquals(100, result.get(0).getTotalScore());
+        assertEquals(BigDecimal.valueOf(100), result.get(0).getTotalScore());
         verify(dailyScoreRepository).getMonthlyLeaderBoard();
     }
 
@@ -146,7 +146,7 @@ class DailyScoreServiceTest {
         // Assert
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertEquals(100, result.get(0).getTotalScore());
+        assertEquals(BigDecimal.valueOf(100), result.get(0).getTotalScore());
         verify(dailyScoreRepository).getAllTimeLeaderBoard();
     }
 }

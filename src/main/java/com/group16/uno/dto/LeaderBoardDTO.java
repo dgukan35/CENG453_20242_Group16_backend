@@ -1,7 +1,12 @@
 package com.group16.uno.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 
+@Setter
+@Getter
 public class LeaderBoardDTO {
     private String username;
     private BigDecimal totalScore;
@@ -12,20 +17,4 @@ public class LeaderBoardDTO {
         this.totalScore = totalScore;
     }
 
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public BigDecimal getTotalScore() {
-        return totalScore;
-    }
-
-    public void setTotalScore(BigDecimal totalScore) {
-        this.totalScore = totalScore;
-    }
 }
