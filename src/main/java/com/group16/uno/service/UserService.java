@@ -61,4 +61,8 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
+    public long getUserCount() {
+        return userRepository.count();
+    }
+
 }
