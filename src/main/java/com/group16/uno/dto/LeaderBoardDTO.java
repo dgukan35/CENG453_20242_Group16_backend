@@ -17,5 +17,4 @@ public class LeaderBoardDTO {
         this.totalScore = totalScore;
     }
 
-
 }
