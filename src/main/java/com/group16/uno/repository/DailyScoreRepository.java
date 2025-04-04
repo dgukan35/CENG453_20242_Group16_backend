@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.sql.Date;
@@ -27,7 +28,7 @@ public interface DailyScoreRepository extends JpaRepository<DailyScore, Long> {
     void updateDailyScore(
             @Param("userId") String userId,
             @Param("createdAt") Date createdAt,
-            @Param("increment") Integer value
+            @Param("increment") BigDecimal value
     );
 
     @Query(value = "SELECT u.username, SUM(ds.score) as total_score " +

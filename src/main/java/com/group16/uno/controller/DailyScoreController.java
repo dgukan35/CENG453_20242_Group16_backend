@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +36,7 @@ public class DailyScoreController {
     @PutMapping("/daily-score")
     public ResponseEntity<String> updateDailyScore(
             @Parameter(description = "UserId of the user", required = true) @RequestParam String userId,
-            @Parameter(description = "Score user got from the game", required = true) @RequestParam Integer score) {
+            @Parameter(description = "Score user got from the game", required = true) @RequestParam BigDecimal score) {
         try {
             Date today = new Date(System.currentTimeMillis());
             Optional<DailyScore> dailyScore = dailyScoreService.getDailyScoreByUserIdAndCreatedAt(userId, today);
@@ -94,13 +95,20 @@ public class DailyScoreController {
     })
     @GetMapping("/all-time-leaderboard")
     public ResponseEntity<List<LeaderBoardDTO>> getAllTimeLeaderboard() {
-        List<LeaderBoardDTO> leaderboard = dailyScoreService.getAllTimeLeaderBoard();
+        try {
+            List<LeaderBoardDTO> leaderboard = dailyScoreService.getAllTimeLeaderBoard();
 
-        if (!leaderboard.isEmpty()) {
-            return ResponseEntity.ok(leaderboard);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+            if (!leaderboard.isEmpty()) {
+                return ResponseEntity.ok(leaderboard);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.emptyList());
         }
     }
+
 
 }
