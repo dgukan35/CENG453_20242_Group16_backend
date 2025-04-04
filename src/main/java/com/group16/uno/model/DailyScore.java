@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 
 @Entity
@@ -27,11 +28,11 @@ public class DailyScore {
     @Setter
     @Getter
     @Column(nullable = false)
-    private Integer score;
+    private BigDecimal score;
 
     public DailyScore() {}
 
-    public DailyScore(User user, Date createdAt, Integer score) {
+    public DailyScore(User user, Date createdAt, BigDecimal score) {
         this.user = user;
         this.createdAt = createdAt;
         this.score = score;

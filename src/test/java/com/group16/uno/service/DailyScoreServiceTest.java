@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.Optional;
 import java.util.List;
@@ -41,7 +42,7 @@ class DailyScoreServiceTest {
         user = new User( "johndoe", "john@example.com", "hashedPassword");
         user.setId("userId");
         createdAt = Date.valueOf("2025-04-04");
-        dailyScore = new DailyScore(user, createdAt, 100);
+        dailyScore = new DailyScore(user, createdAt, BigDecimal.valueOf(100));
     }
 
     @Test
@@ -51,12 +52,12 @@ class DailyScoreServiceTest {
         when(dailyScoreRepository.save(any(DailyScore.class))).thenReturn(dailyScore);
 
         // Act
-        DailyScore result = dailyScoreService.createDailyScore("userId", createdAt, 100);
+        DailyScore result = dailyScoreService.createDailyScore("userId", createdAt, BigDecimal.valueOf(100));
 
         // Assert
         assertNotNull(result);
         assertEquals("userId", result.getUser().getId());
-        assertEquals(100, result.getScore());
+        assertEquals(BigDecimal.valueOf(100), result.getScore());
         verify(userRepository).findById("userId");
         verify(dailyScoreRepository).save(any(DailyScore.class));
     }
@@ -68,7 +69,7 @@ class DailyScoreServiceTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            dailyScoreService.createDailyScore("invalidUserId", createdAt, 100);
+            dailyScoreService.createDailyScore("invalidUserId", createdAt, BigDecimal.valueOf(100));
         });
         assertEquals("User not found with id: invalidUserId", exception.getMessage());
         verify(userRepository).findById("invalidUserId");
@@ -85,26 +86,26 @@ class DailyScoreServiceTest {
 
         // Assert
         assertTrue(result.isPresent());
-        assertEquals(100, result.get().getScore());
+        assertEquals(BigDecimal.valueOf(100), result.get().getScore());
         verify(dailyScoreRepository).findByUserIdAndCreatedAt("userId", createdAt);
     }
 
     @Test
     void updateDailyScore_shouldUpdateScore() {
         // Arrange
-        doNothing().when(dailyScoreRepository).updateDailyScore("userId", createdAt, 200);
+        doNothing().when(dailyScoreRepository).updateDailyScore("userId", createdAt, BigDecimal.valueOf(200));
 
         // Act
-        dailyScoreService.updateDailyScore("userId", createdAt, 200);
+        dailyScoreService.updateDailyScore("userId", createdAt, BigDecimal.valueOf(200));
 
         // Assert
-        verify(dailyScoreRepository).updateDailyScore("userId", createdAt, 200);
+        verify(dailyScoreRepository).updateDailyScore("userId", createdAt, BigDecimal.valueOf(200));
     }
 
     @Test
     void getWeeklyLeaderBoard_shouldReturnLeaderBoard() {
         // Arrange
-        List<LeaderBoardDTO> leaderBoard = List.of(new LeaderBoardDTO("userId", 100));
+        List<LeaderBoardDTO> leaderBoard = List.of(new LeaderBoardDTO("userId", BigDecimal.valueOf(100)));
         when(dailyScoreRepository.getWeeklyLeaderBoard()).thenReturn(leaderBoard);
 
         // Act
@@ -113,14 +114,14 @@ class DailyScoreServiceTest {
         // Assert
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertEquals(100, result.get(0).getTotalScore());
+        assertEquals(BigDecimal.valueOf(100), result.get(0).getTotalScore());
         verify(dailyScoreRepository).getWeeklyLeaderBoard();
     }
 
     @Test
     void getMonthlyLeaderBoard_shouldReturnLeaderBoard() {
         // Arrange
-        List<LeaderBoardDTO> leaderBoard = List.of(new LeaderBoardDTO("userId", 100));
+        List<LeaderBoardDTO> leaderBoard = List.of(new LeaderBoardDTO("userId", BigDecimal.valueOf(100)));
         when(dailyScoreRepository.getMonthlyLeaderBoard()).thenReturn(leaderBoard);
 
         // Act
@@ -129,14 +130,14 @@ class DailyScoreServiceTest {
         // Assert
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertEquals(100, result.get(0).getTotalScore());
+        assertEquals(BigDecimal.valueOf(100), result.get(0).getTotalScore());
         verify(dailyScoreRepository).getMonthlyLeaderBoard();
     }
 
     @Test
     void getAllTimeLeaderBoard_shouldReturnLeaderBoard() {
         // Arrange
-        List<LeaderBoardDTO> leaderBoard = List.of(new LeaderBoardDTO("userId", 100));
+        List<LeaderBoardDTO> leaderBoard = List.of(new LeaderBoardDTO("userId", BigDecimal.valueOf(100)));
         when(dailyScoreRepository.getAllTimeLeaderBoard()).thenReturn(leaderBoard);
 
         // Act
@@ -145,7 +146,7 @@ class DailyScoreServiceTest {
         // Assert
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertEquals(100, result.get(0).getTotalScore());
+        assertEquals(BigDecimal.valueOf(100), result.get(0).getTotalScore());
         verify(dailyScoreRepository).getAllTimeLeaderBoard();
     }
 }
