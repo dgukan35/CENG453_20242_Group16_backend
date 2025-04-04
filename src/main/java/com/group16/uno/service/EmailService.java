@@ -19,9 +19,7 @@ public class EmailService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
         message.setSubject("Password Reset");
-        message.setText("To reset your password, click the link below. Since the frontend is not yet implemented, you can also copy the token and use it manually with the Set New Password endpoint.. Token: " + token + "\n" +
-                "Resetlink:\n"
-                + resetLink);
+        message.setText("Since the frontend is not implemented yet, you can copy the following token and use it manually with the Set New Password endpoint.." + "\n" + "Token: " + token);
         mailSender.send(message);
     }
 }
