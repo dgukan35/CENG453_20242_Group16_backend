@@ -14,6 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import java.util.Optional;
 import org.modelmapper.ModelMapper;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 
 @RestController
 @Tag(name = "User Controller")
@@ -27,13 +30,16 @@ public class UserController {
 
     @Operation(summary = "Get user details", description = "Fetches user details by id.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User details retrieved successfully"),
-            @ApiResponse(responseCode = "404", description = "User not found"),
-            @ApiResponse(responseCode = "401", description = "UnAuthorized")
+            @ApiResponse(responseCode = "200", description = "User details retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = UserDto.class))),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized",
+                    content = @Content(schema = @Schema(implementation = String.class)))
     })
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<?> getUser(
+    public ResponseEntity<UserDto> getUser(
             @Parameter(description = "Id of the user to fetch", required = true)
             @PathVariable String id) {
 

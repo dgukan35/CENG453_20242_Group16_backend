@@ -15,7 +15,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import com.group16.uno.dto.UserDto;
+import com.group16.uno.dto.LoginResponseDto;
 import org.modelmapper.ModelMapper;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 
 import java.util.*;
 
@@ -44,6 +48,12 @@ public class AuthController {
 
     @Operation(summary = "Sign up")
     @PostMapping("/register")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User registered successfully",
+                    content = @Content(schema = @Schema(implementation = UserDto.class))),
+            @ApiResponse(responseCode = "500", description = "Invalid input or username taken",
+                    content = @Content(schema = @Schema(implementation = String.class)))
+    })
     public ResponseEntity<?> register(@RequestParam String username,
                                       @RequestParam String email,
                                       @RequestParam String password) {
@@ -62,7 +72,7 @@ public class AuthController {
 
         Optional<User> existingUser = userService.getUserByUsername(username);
         if (existingUser.isPresent()) {
-            return ResponseEntity.badRequest().body("Username already taken");
+            return ResponseEntity.badRequest().build();
         }
 
         User createdUser = userService.createUser(username, email, password);
@@ -72,34 +82,42 @@ public class AuthController {
 
     @Operation(summary = "Sign in")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "401", description = "Invalid username or password")
+            @ApiResponse(responseCode = "200", description = "Login successful",
+                    content = @Content(schema = @Schema(implementation = LoginResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid username or password",
+                    content = @Content(schema = @Schema(implementation = String.class)))
     })
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam String username,
-                                   @RequestParam String password) {
+    public ResponseEntity<LoginResponseDto> login(@RequestParam String username,
+                                                  @RequestParam String password) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
             );
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
         User user = userService.getUserByUsername(username).get();
         String jwt = jwtService.generateToken(user.getUsername());
 
         UserDto userDto = modelMapper.map(user, UserDto.class);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", jwt);
-        response.put("user", userDto);
+        LoginResponseDto response = new LoginResponseDto(jwt, userDto);
 
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Send reset password token to email adress")
+    @Operation(summary = "Send reset password token to email address")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Password reset link sent to email",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "User not found with this email",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Server error during reset process",
+                    content = @Content(schema = @Schema(implementation = String.class)))
+    })
     @PostMapping("/reset-password")
-    public ResponseEntity<?> sendResetPasswordMail(@RequestParam String email) {
+    public ResponseEntity<String> sendResetPasswordMail(@RequestParam String email) {
         try {
 
             Optional<User> optionalUser = userService.getUserByEmail(email);
@@ -127,6 +145,15 @@ public class AuthController {
     }
 
     @Operation(summary = "Set new password using the reset token")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Password successfully updated",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid or expired token",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Server error while setting new password",
+                    content = @Content(schema = @Schema(implementation = String.class)))
+    })
+
     @PostMapping("/set-new-password")
     public ResponseEntity<?> setNewPassword(@RequestParam String token,
                                            @RequestParam String newPassword) {
@@ -154,6 +181,14 @@ public class AuthController {
 
 
     @Operation(summary = "Validate password reset token before resetting password. (Will be used after front end implementation)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token is valid",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid or expired token",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Error occurred during validation",
+                    content = @Content(schema = @Schema(implementation = String.class)))
+    })
     @GetMapping("/validate-reset-token")
     public ResponseEntity<?> validateResetToken(@RequestParam String token) {
         try {
