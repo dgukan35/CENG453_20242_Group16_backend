@@ -11,11 +11,11 @@ public class GameRoomService {
     private Map<String, GameRoom> gameRooms = new HashMap<>();
     private final Lock lock = new ReentrantLock();
 
-    public String createGameRoom() {
+    public String createGameRoom(String creatorId) {
         lock.lock();
         try {
             String roomId = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-            gameRooms.put(roomId, new GameRoom(roomId));
+            gameRooms.put(roomId, new GameRoom(roomId, creatorId));
             return roomId;
         } finally {
             lock.unlock();
@@ -59,6 +59,7 @@ public class GameRoomService {
 
     public static class GameRoom {
         private String roomId;
+        private String creatorId;
         private List<String> players = new ArrayList<>();
         private Map<String, List<Card>> playerHands = new HashMap<>();
         private List<Card> deck = new ArrayList<>();
@@ -68,9 +69,11 @@ public class GameRoomService {
         private boolean clockwise = true;
         private int drawStack = 0;
         private boolean gameStarted = false;
+        private Map<String, Boolean> playerReady = new HashMap<>();
 
-        public GameRoom(String roomId) {
+        public GameRoom(String roomId, String creatorId) {
             this.roomId = roomId;
+            this.creatorId = creatorId;
             initializeDeck();
         }
 
@@ -78,15 +81,34 @@ public class GameRoomService {
             if (players.size() < 4 && !players.contains(playerId)) {
                 players.add(playerId);
                 playerHands.put(playerId, new ArrayList<>());
+                playerReady.put(playerId, false);
             }
         }
 
         public boolean removePlayer(String playerId) {
             playerHands.remove(playerId);
+            playerReady.remove(playerId);
             return players.remove(playerId);
         }
 
-        public void startGame() {
+        public void setPlayerReady(String playerId, boolean ready) {
+            if (playerReady.containsKey(playerId)) {
+                playerReady.put(playerId, ready);
+            }
+        }
+
+        public boolean allPlayersReady() {
+            return !playerReady.isEmpty() && playerReady.values().stream().allMatch(Boolean::booleanValue);
+        }
+
+        public Map<String, Boolean> getPlayerReadyStates() {
+            return new HashMap<>(playerReady);
+        }
+
+        public void startGame(String playerId) {
+            if (!playerId.equals(creatorId)) {
+                throw new IllegalStateException("Only the room creator can start the game.");
+            }
             if (players.size() >= 2 && !gameStarted) {
                 gameStarted = true;
                 shuffleDeck();
@@ -146,11 +168,9 @@ public class GameRoomService {
             return true;
         }
 
-        private boolean isValidPlay(Card card) {
+        public boolean isValidPlay(Card card) {
             if (discardPile.isEmpty()) return true;
-            
             Card topCard = discardPile.get(discardPile.size() - 1);
-            
             if (drawStack > 0) {
                 if (topCard.getValue().equals("Draw Two")) {
                     return card.getValue().equals("Draw Two");
@@ -160,7 +180,6 @@ public class GameRoomService {
                 }
                 return false;
             }
-            
             return card.getValue().equals("Wild") || 
                    card.getValue().equals("Wild Draw Four") ||
                    card.getColor().equals(currentColor) || 
@@ -246,6 +265,7 @@ public class GameRoomService {
 
         // Getters
         public String getRoomId() { return roomId; }
+        public String getCreatorId() { return creatorId; }
         public List<String> getPlayers() { return new ArrayList<>(players); }
         public String getCurrentPlayer() { 
             return players.isEmpty() ? null : players.get(currentPlayerIndex); 

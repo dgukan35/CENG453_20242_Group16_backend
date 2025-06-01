@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/game")
@@ -74,7 +75,7 @@ public class GameWebSocketController {
                 return ResponseEntity.badRequest().body(errorResponse);
             }
             
-            String gameId = gameRoomService.createGameRoom();
+            String gameId = gameRoomService.createGameRoom(playerName);
             gameRoomService.addPlayerToRoom(gameId, playerName);
             
             // Get the created room to populate response with complete information
@@ -230,6 +231,9 @@ public class GameWebSocketController {
         
         try {
             GameStateService.MultiplayerGameState gameState = gameStateService.getGame(gameId);
+            System.out.println("[playCard] gameState instance: " + System.identityHashCode(gameState));
+            GameRoomService.GameRoom gameRoom = gameRoomService.getGameRoom(gameId);
+            System.out.println("[playCard] gameRoom instance: " + System.identityHashCode(gameRoom));
             
             if (gameState != null && gameState.isGameStarted()) {
                 // Parse card value and color from card string (e.g., "red_7")
@@ -251,6 +255,18 @@ public class GameWebSocketController {
                 
                 // Play the card through backend logic
                 gameState.playCard(playerName, cardToPlay, chosenColor);
+
+                // Debug: Print full game state after card is played
+                System.out.println("--- Game State After Card Played ---");
+                System.out.println("Current player: " + gameState.getCurrentPlayerName());
+                System.out.println("Current color: " + gameState.getCurrentColor());
+                System.out.println("Top card: " + gameState.getTopCard());
+                System.out.println("Direction: " + (gameState.isClockwise() ? "clockwise" : "counter-clockwise"));
+                System.out.println("Draw stack: " + gameState.getDrawStack());
+                for (String p : gameState.getPlayerOrder()) {
+                    System.out.println("Player: " + p + ", Hand: " + gameState.getPlayerHand(p));
+                }
+                System.out.println("-------------------------------");
                 
                 // Broadcast successful card play to all players
                 Map<String, Object> response = new HashMap<>();
@@ -275,14 +291,14 @@ public class GameWebSocketController {
                 for (String player : gameState.getPlayerOrder()) {
                     Map<String, Object> playerResponse = new HashMap<>(response);
                     playerResponse.put("playerHand", gameState.getPlayerHand(player));
-                    
+                    playerResponse.put("players", gameState.getPlayerOrder());
+                    playerResponse.put("playerIndex", gameState.getPlayerOrder().indexOf(player));
                     // Calculate hand sizes for all players
                     Map<String, Integer> handSizes = new HashMap<>();
                     for (String p : gameState.getPlayerOrder()) {
                         handSizes.put(p, gameState.getPlayerHand(p).size());
                     }
                     playerResponse.put("handSizes", handSizes);
-                    
                     messagingTemplate.convertAndSendToUser(player, "/queue/gameState", playerResponse);
                 }
                 
@@ -304,28 +320,46 @@ public class GameWebSocketController {
         String gameId = drawMessage.get("gameId");
         String playerName = drawMessage.get("player");
         String drawCount = drawMessage.get("drawCount");
-        
         try {
             GameStateService.MultiplayerGameState gameState = gameStateService.getGame(gameId);
-            
+            System.out.println("[drawCard] gameState instance: " + System.identityHashCode(gameState));
             if (gameState != null && gameState.isGameStarted()) {
                 // Validate it's player's turn
                 if (!gameState.getCurrentPlayerName().equals(playerName)) {
                     throw new IllegalStateException("Not your turn");
                 }
-                
                 int cardsToTraw = drawCount != null ? Integer.parseInt(drawCount) : 1;
-                
-                // Handle forced draws (draw stack)
                 if (gameState.getDrawStack() > 0) {
+                    // Forced draw: always allow, do not check for playable cards
                     gameState.handleForcedDraw(playerName);
                     cardsToTraw = gameState.getDrawStack();
                 } else {
+                    // Normal draw: check for playable cards
+                    List<com.group16.uno.dto.CardDataDTO> playerHand = gameState.getPlayerHand(playerName);
+                    System.out.println("Checking playable cards for player: " + playerName);
+                    System.out.println("Current color: " + gameState.getCurrentColor());
+                    System.out.println("Top card: " + gameState.getTopCard());
+                    for (com.group16.uno.dto.CardDataDTO card : playerHand) {
+                        System.out.println("Card in hand: " + card + ", canPlayCard: " + gameState.canPlayCard(card, playerName));
+                    }
+                    boolean hasPlayable = false;
+                    for (com.group16.uno.dto.CardDataDTO card : playerHand) {
+                        if (gameState.canPlayCard(card, playerName)) {
+                            hasPlayable = true;
+                            break;
+                        }
+                    }
+                    if (hasPlayable) {
+                        Map<String, Object> errorResponse = new HashMap<>();
+                        errorResponse.put("type", "ERROR");
+                        errorResponse.put("message", "You have a playable card and cannot draw.");
+                        messagingTemplate.convertAndSendToUser(playerName, "/queue/errors", errorResponse);
+                        return;
+                    }
                     // Normal draw
                     gameState.drawCards(playerName, cardsToTraw);
                     gameState.moveToNextPlayer();
                 }
-                
                 // Broadcast draw action to all players
                 Map<String, Object> response = new HashMap<>();
                 response.put("type", "CARDS_DRAWN");
@@ -334,22 +368,20 @@ public class GameWebSocketController {
                 response.put("gameId", gameId);
                 response.put("currentPlayer", gameState.getCurrentPlayerName());
                 response.put("drawStack", gameState.getDrawStack());
-                
                 // Send updated game state to each player
                 for (String player : gameState.getPlayerOrder()) {
                     Map<String, Object> playerResponse = new HashMap<>(response);
                     playerResponse.put("playerHand", gameState.getPlayerHand(player));
-                    
+                    playerResponse.put("players", gameState.getPlayerOrder());
+                    playerResponse.put("playerIndex", gameState.getPlayerOrder().indexOf(player));
                     // Calculate hand sizes for all players
                     Map<String, Integer> handSizes = new HashMap<>();
                     for (String p : gameState.getPlayerOrder()) {
                         handSizes.put(p, gameState.getPlayerHand(p).size());
                     }
                     playerResponse.put("handSizes", handSizes);
-                    
                     messagingTemplate.convertAndSendToUser(player, "/queue/gameState", playerResponse);
                 }
-                
                 // Broadcast to room
                 messagingTemplate.convertAndSend("/topic/game/" + gameId, response);
             }
@@ -357,7 +389,6 @@ public class GameWebSocketController {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("type", "ERROR");
             errorResponse.put("message", "Failed to draw card: " + e.getMessage());
-            
             messagingTemplate.convertAndSendToUser(playerName, "/queue/errors", errorResponse);
         }
     }
@@ -368,22 +399,56 @@ public class GameWebSocketController {
         return "Echo: " + message;
     }
 
+    @MessageMapping("/playerReady")
+    public void playerReady(Map<String, String> readyMessage) {
+        String gameId = readyMessage.get("gameId");
+        String playerName = readyMessage.get("player");
+        GameRoomService.GameRoom gameRoom = gameRoomService.getGameRoom(gameId);
+        if (gameRoom != null) {
+            gameRoom.setPlayerReady(playerName, true);
+            // Send updated readyStates to the client who sent PLAYER_READY
+            Map<String, Object> response = new HashMap<>();
+            response.put("type", "READY_UPDATE");
+            response.put("readyStates", gameRoom.getPlayerReadyStates());
+            messagingTemplate.convertAndSendToUser(playerName, "/queue/gameState", response);
+        }
+    }
+
     @MessageMapping("/startGame") // e.g., /app/startGame
     public void startGame(Map<String, String> startMessage) {
         String gameId = startMessage.get("gameId");
         String playerName = startMessage.get("player");
-        
         try {
             GameRoomService.GameRoom gameRoom = gameRoomService.getGameRoom(gameId);
-            
             if (gameRoom != null && gameRoom.getPlayers().size() >= 2) {
+                // Only the creator can start the game
+                if (!playerName.equals(gameRoom.getCreatorId())) {
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    errorResponse.put("type", "ERROR");
+                    errorResponse.put("message", "Only the room creator can start the game.");
+                    messagingTemplate.convertAndSendToUser(playerName, "/queue/errors", errorResponse);
+                    return;
+                }
+                if (!gameRoom.allPlayersReady()) {
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    errorResponse.put("type", "ERROR");
+                    errorResponse.put("message", "Not all players are ready.");
+                    // Add list of not ready players
+                    List<String> notReadyPlayers = new ArrayList<>();
+                    for (Map.Entry<String, Boolean> entry : gameRoom.getPlayerReadyStates().entrySet()) {
+                        if (!entry.getValue()) {
+                            notReadyPlayers.add(entry.getKey());
+                        }
+                    }
+                    errorResponse.put("notReadyPlayers", notReadyPlayers);
+                    messagingTemplate.convertAndSendToUser(playerName, "/queue/errors", errorResponse);
+                    return;
+                }
                 // Create backend game state
                 GameStateService.MultiplayerGameState gameState = gameStateService.createGame(gameId);
                 gameState.startGame(gameRoom.getPlayers());
-                
                 // Mark room as started
-                gameRoom.startGame();
-                
+                gameRoom.startGame(playerName);
                 // Notify all players that game has started
                 Map<String, Object> response = new HashMap<>();
                 response.put("type", "GAME_STARTED");
@@ -394,23 +459,21 @@ public class GameWebSocketController {
                 response.put("players", gameState.getPlayerOrder());
                 response.put("direction", gameState.isClockwise() ? 1 : -1);
                 response.put("message", "Game started!");
-                
+                response.put("readyStates", gameRoom.getPlayerReadyStates());
                 // Send game state to each player with their specific hand
                 for (String player : gameState.getPlayerOrder()) {
                     Map<String, Object> playerResponse = new HashMap<>(response);
                     playerResponse.put("playerHand", gameState.getPlayerHand(player));
+                    playerResponse.put("players", gameState.getPlayerOrder());
                     playerResponse.put("playerIndex", gameState.getPlayerOrder().indexOf(player));
-                    
                     // Calculate hand sizes for all players
                     Map<String, Integer> handSizes = new HashMap<>();
                     for (String p : gameState.getPlayerOrder()) {
                         handSizes.put(p, gameState.getPlayerHand(p).size());
                     }
                     playerResponse.put("handSizes", handSizes);
-                    
                     messagingTemplate.convertAndSendToUser(player, "/queue/gameState", playerResponse);
                 }
-                
                 // Also broadcast to room
                 messagingTemplate.convertAndSend("/topic/game/" + gameId, response);
             }
@@ -418,7 +481,6 @@ public class GameWebSocketController {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("type", "ERROR");
             errorResponse.put("message", "Failed to start game: " + e.getMessage());
-            
             messagingTemplate.convertAndSendToUser(playerName, "/queue/errors", errorResponse);
         }
     }
@@ -457,6 +519,35 @@ public class GameWebSocketController {
             errorResponse.put("message", "Failed to join game via WebSocket: " + e.getMessage());
             
             messagingTemplate.convertAndSendToUser(playerName, "/queue/errors", errorResponse);
+        }
+    }
+
+    @MessageMapping("/getGameState")
+    public void getGameState(Map<String, String> message) {
+        String gameId = message.get("gameId");
+        String playerName = message.get("player");
+        GameRoomService.GameRoom gameRoom = gameRoomService.getGameRoom(gameId);
+        GameStateService.MultiplayerGameState gameState = gameStateService.getGame(gameId);
+        if (gameRoom != null && gameState != null && gameRoom.isGameStarted()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("type", "GAME_STATE");
+            response.put("gameId", gameId);
+            response.put("currentPlayer", gameState.getCurrentPlayerName());
+            response.put("topCard", gameState.getTopCard().toString());
+            response.put("currentColor", gameState.getCurrentColor());
+            response.put("players", gameState.getPlayerOrder());
+            response.put("direction", gameState.isClockwise() ? 1 : -1);
+            response.put("message", "Current game state");
+            response.put("readyStates", gameRoom.getPlayerReadyStates());
+            // Per-user fields
+            response.put("playerHand", gameState.getPlayerHand(playerName));
+            response.put("playerIndex", gameState.getPlayerOrder().indexOf(playerName));
+            Map<String, Integer> handSizes = new HashMap<>();
+            for (String p : gameState.getPlayerOrder()) {
+                handSizes.put(p, gameState.getPlayerHand(p).size());
+            }
+            response.put("handSizes", handSizes);
+            messagingTemplate.convertAndSendToUser(playerName, "/queue/gameState", response);
         }
     }
 } 

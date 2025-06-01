@@ -37,8 +37,7 @@ class EmailServiceTest {
         SimpleMailMessage expectedMessage = new SimpleMailMessage();
         expectedMessage.setTo(email);
         expectedMessage.setSubject("Password Reset");
-        expectedMessage.setText("To reset your password, click the link below. Since the frontend is not yet implemented, you can also copy the token and use it manually with the Set New Password endpoint.. Token: " + token + "\n" +
-                "Resetlink:\n" + resetLink);
+        expectedMessage.setText("You can copy and use the following token." + "\n" + "Token: " + token);
 
         // Act
         emailService.sendResetEmail(email, resetLink, token);
