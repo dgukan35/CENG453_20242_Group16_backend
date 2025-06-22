@@ -1,5 +1,5 @@
 # CENG453_20242_Group16_backend
-Backend Repository for CENG453 Term Project
+Backend Repository for CENG453 Term Project. UNO GAME.
 
 Render URL: https://ceng453-20242-group16-backend.onrender.com/
 
